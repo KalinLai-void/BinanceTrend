@@ -226,5 +226,5 @@ if __name__ == '__main__':
     # -------------------------------------------------------------- #
     anim = animation.FuncAnimation(fig, showCandlestickChart, interval=1000)
 
-    root.protocol("WM_DELETE_WINDOW", onWinClosing)
+    root.protocol("WM_DELETE_WINDOW", onWinClosing) # to termine animation function
     root.mainloop()
