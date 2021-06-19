@@ -43,7 +43,7 @@ def setCoinDataPanel():
     priceLabel = Label(coinData_Fig_Frame, width=30, font=("", 14, "bold"))
     priceLabel.grid(row=0, column=0)
 
-    live_var = IntVar()
+    live_var = IntVar() ### now it isn't able to use, getting value is still 0
     live_checkBtn = Checkbutton(coinData_Fig_Frame, text="Live Update", font=("", 14,""),
                                                         variable=live_var, command=pauseAnimation)
     live_checkBtn.select()
@@ -68,7 +68,7 @@ def setCoinDataPanel():
 pause = False
 def pauseAnimation():
     global pause
-    if pause:
+    if pause: # I don't know why I can't use variable "live_var"
         pause = False
     else:
         pause = True
@@ -129,7 +129,7 @@ def setMarketListPanel():
     listFrame.grid(row=2, column=0, rowspan=2, columnspan=4)
 
     scrollbar = Scrollbar(listFrame, orient=VERTICAL)
-    coinListBox = Listbox(listFrame, height=27, font=("", 14, ""), yscrollcommand=scrollbar.set)
+    coinListBox = Listbox(listFrame, height=29, font=("", 14, ""), yscrollcommand=scrollbar.set)
     scrollbar.config(command=coinListBox.yview)
     setCoinListBox()
     scrollbar.pack(side=RIGHT, fill=Y)
