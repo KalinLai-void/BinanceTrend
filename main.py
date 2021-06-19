@@ -1,3 +1,6 @@
+from typing_extensions import runtime
+
+from numpy.core.fromnumeric import repeat
 import binanceAPI as BN_config
 import data as BN_data
 import account as BN_account
@@ -8,9 +11,9 @@ import datetime as dt
 
 import mplfinance as mpf
 import matplotlib
-from matplotlib import animation as animation
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 matplotlib.use("TkAgg")
+from matplotlib import animation as animation
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 colors = mpf.make_marketcolors(up="tab:green", down="tab:red", wick={"up" : "green", "down" : "red"})
 style = mpf.make_mpf_style(marketcolors=colors, mavcolors=["orange", "purple", "blue"])
@@ -32,6 +35,7 @@ selected_coinSymbol = None
 def setCoinDataPanel():
     global fig, canvas
     global cycleComboList, priceLabel
+    global live_var
 
     coinData_Fig_Frame = Frame(root)
     coinData_Fig_Frame.grid(row=1, column=1)
@@ -39,43 +43,65 @@ def setCoinDataPanel():
     priceLabel = Label(coinData_Fig_Frame, width=30, font=("", 14, "bold"))
     priceLabel.grid(row=0, column=0)
 
+    live_var = IntVar()
+    live_checkBtn = Checkbutton(coinData_Fig_Frame, text="Live Update", font=("", 14,""),
+                                                        variable=live_var, command=pauseAnimation)
+    live_checkBtn.select()
+    live_checkBtn.grid(row=0, column=1)
+
     cycleComboList = ttk.Combobox(coinData_Fig_Frame, state="readonly", width=10, font=("", 14,""))
     cycleComboList["values"] = ("1 Hour", "1 Day", "1 Week", "1 Month", "1 Year", "All history")
-    cycleComboList.grid(row=0, column=1)
+    cycleComboList.grid(row=0, column=2)
     cycleComboList.current(0)
 
-    canvas = FigureCanvasTkAgg(fig, master=coinData_Fig_Frame)
+    coinChartFrame = Frame(coinData_Fig_Frame)
+    coinChartFrame.grid(row=1, column=0, columnspan=3)
+
+    canvas = FigureCanvasTkAgg(fig, master=coinChartFrame)
     canvas.draw()
-    canvas.get_tk_widget().grid(row=1, column=0, columnspan=2)
+    canvas.get_tk_widget().pack()
+
+    toolbar = NavigationToolbar2Tk(canvas, coinChartFrame)
+    toolbar.update()
+    canvas._tkcanvas.pack()
+
+pause = False
+def pauseAnimation():
+    global pause
+    if pause:
+        pause = False
+    else:
+        pause = True
 
 def showCandlestickChart(i):
-    selected_keepTime = cycleComboList.get()
+    if not pause:
+        selected_keepTime = cycleComboList.get()
 
-    klines_df = BN_data.getBinanceKLines_DataFame(selected_coinSymbol, selected_keepTime)
-    currentPrice = BN_data.getPrice(selected_coinSymbol)
-    symbolsPair = list(BN_data.getMarket("ALL").keys())[list(BN_data.getMarket("ALL").values()).index(selected_coinSymbol)]
-    # using the value to find the key in dictionary
+        klines_df = BN_data.getBinanceKLines_DataFame(selected_coinSymbol, selected_keepTime)
+        currentPrice = BN_data.getPrice(selected_coinSymbol)
+        symbolsPair = list(BN_data.getMarket("ALL").keys())[list(BN_data.getMarket("ALL").values()).index(selected_coinSymbol)]
+        # using the value to find the key in dictionary
 
-    mainAx.clear()
-    volumeAx.clear()
-    
-    priceLabel.config(text=symbolsPair + ": " + currentPrice)
+        mainAx.clear()
+        volumeAx.clear()
+        
+        priceLabel.config(text=symbolsPair + ": " + currentPrice)
 
-    mav = ()
-    figtxts[0].set_visible(False), figtxts[1].set_visible(False), figtxts[2].set_visible(False)
+        mav = ()
+        figtxts[0].set_visible(False), figtxts[1].set_visible(False), figtxts[2].set_visible(False)
 
-    if selected_keepTime == "1 Year" or selected_keepTime == "All history":
-        mav = (7, 25, 99)
-        figtxts[0].set_visible(True), figtxts[1].set_visible(True), figtxts[2].set_visible(True)
-    elif selected_keepTime == "1 Month":
-        mav = (7, 25)
-        figtxts[0].set_visible(True), figtxts[1].set_visible(True)
-    elif selected_keepTime == "1 Week":
-        mav = (7)
-        figtxts[0].set_visible(True)
+        if selected_keepTime == "1 Year" or selected_keepTime == "All history":
+            mav = (7, 25, 99)
+            figtxts[0].set_visible(True), figtxts[1].set_visible(True), figtxts[2].set_visible(True)
+        elif selected_keepTime == "1 Month":
+            mav = (7, 25)
+            figtxts[0].set_visible(True), figtxts[1].set_visible(True)
+        elif selected_keepTime == "1 Week":
+            mav = (7)
+            figtxts[0].set_visible(True)
 
-    mpf.plot(klines_df, ax=mainAx, volume=volumeAx, ylabel="Price", 
-                type="candle", style=style, mav=mav)
+        mpf.plot(klines_df, ax=mainAx, volume=volumeAx, ylabel="Price", 
+                    type="candle", style=style, mav=mav)
 
 ###############################################################################################
 def setMarketListPanel():
@@ -177,6 +203,7 @@ def onMarketButtonClick(coin):
 bIsAPISetted = False
 def setMenu():
     global bIsAPISetted, accountMenu
+    global anim
 
     menuBar = Menu(root)
     root.config(menu=menuBar)
