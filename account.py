@@ -1,6 +1,7 @@
 import binanceAPI as BN_config
 import data as BN_data 
 from tkinter import *
+import webbrowser
 
 from decimal import Decimal
 
@@ -25,9 +26,12 @@ def setAPI():
     keyEntry.grid(row=0, column=1)
     secretEntry.grid(row=1, column=1)
 
-    submit = Button(API_Settings, text="Submit", font=("", 14,""), width=75, relief=GROOVE,
-                        command=lambda:sendToAPIConfig(keyEntry, secretEntry))
-    submit.grid(row=2, column=0, columnspan=2)
+    Button(API_Settings, text="Submit", font=("", 14,""), width=75, relief=GROOVE,
+        command=lambda:sendToAPIConfig(keyEntry, secretEntry)).grid(row=2, column=0, columnspan=2)
+
+    url = "https://www.binance.com/en-IN/support/faq/360002502072"
+    Button(API_Settings, text="How to get Binance API?", font=("", 14,""), width=75, relief=GROOVE,
+        command=lambda:webbrowser.open(url, new=1)).grid(row=3, column=0, columnspan=2)
 
     if BN_config.isConfigExisted(): # display API BN_config when Config is existed
         BN_config_dict = BN_config.getAPIConfig_dict()
