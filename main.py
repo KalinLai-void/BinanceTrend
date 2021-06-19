@@ -194,7 +194,6 @@ def setMenu():
 
     menuBar.add_cascade(label="Account", menu=accountMenu)
 
-
 def updateTitleClock_andDetectAPI():
     global bIsAPISetted, accountMenu
     now = dt.datetime.now()

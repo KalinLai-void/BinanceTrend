@@ -57,10 +57,21 @@ def updateCoinListBox(event):
     else:
         setCoinListBox()
 
-def onCoinListBoxSelected(event):
+def transferToUSDT(coin, total):
+    # because BTC can be the most coins transfered
+    # so we can transfer to BTC, then fransfer to USDT
+    if coin == "USDT":
+        usdt = total
+    elif not coin == "BTC": # BTC isn't able to transfer itself
+        to_btc = Decimal(BN_data.getPrice(coin+"BTC")) * total
+        usdt = Decimal(BN_data.getPrice("BTCUSDT")) * to_btc
+    else:
+        usdt = Decimal(BN_data.getPrice("BTCUSDT")) * total
+    
+    return usdt
+
+def setCoinListBoxSelection(index):
     global coinDataLabel_dict, coinDataFrame
-    obj = event.widget
-    index = obj.curselection()
     coin = coinDict[coinListBox.get(index)]
     for data in coin:
         if data == "asset":
@@ -72,19 +83,25 @@ def onCoinListBoxSelected(event):
     # total price
     total = Decimal(coin["free"]) + Decimal(coin["locked"])
     
-    # because BTC can be the most coins transfered
-    # so we can transfer to BTC, then fransfer to USDT
-    if coin["asset"] == "USDT":
-        usdt = total
-    elif not coin["asset"] == "BTC": # BTC isn't able to transfer itself
-        to_btc = Decimal(BN_data.getPrice(coin["asset"]+"BTC")) * total
-        usdt = Decimal(BN_data.getPrice("BTCUSDT")) * to_btc
-    else:
-        usdt = Decimal(BN_data.getPrice("BTCUSDT")) * total
+    to_usdt = transferToUSDT(coin["asset"], total)
 
     totalText = "total: " + "{}".format(total) + "\n"
-    totalText += "( ≒ USDT${})".format(round(usdt, 2))
+    totalText += "( ≒ USDT${})".format(round(to_usdt, 2))
     coinDataLabel_dict["total"].config(text=totalText)
+
+def onCoinListBoxSelected(event):
+    obj = event.widget
+    index = obj.curselection()
+    setCoinListBoxSelection(index)
+
+def getEquivalentUSDT():
+    totalUSDT = 0
+    for coin in BN_data.getAccountBalances():
+        if Decimal(coin["free"]) > 0 or Decimal(coin["locked"]) > 0: # total > 0
+            total = Decimal(coin["free"]) + Decimal(coin["locked"])
+            totalUSDT += transferToUSDT(coin["asset"], total)
+
+    return totalUSDT
 
 def showOwned(): # only show owned coin
     global coinListBox, showMyOwned_var
@@ -108,9 +125,18 @@ def openWallet():
     walletLvl.title("Wallet")
     walletLvl.iconbitmap("icon\\Wallet.ico")
 
+    usdtFrame = Frame(walletLvl)
+    usdtFrame.pack(side=TOP)
+    Label(usdtFrame, justify=CENTER, font=("", 14,""), text="Total asset ≒ USDT$ ").pack(side=LEFT)
+    Label(usdtFrame, justify=CENTER, font=("", 16,"underline"),
+          text="{}".format(round(getEquivalentUSDT(), 2))).pack(side=LEFT)
+
+    featureFrame = Frame(walletLvl)
+    featureFrame.pack(side=TOP)
+
     # ------------------------------------------------------------------------------------- #
 
-    panelFrame = Frame(walletLvl)
+    panelFrame = Frame(featureFrame)
     panelFrame.pack(side=LEFT)
     
     showMyOwned_var = IntVar()
@@ -135,7 +161,7 @@ def openWallet():
 
     # ------------------------------------------------------------------------------------- #
 
-    coinDataFrame = LabelFrame(walletLvl, font=("", 16,"bold"))
+    coinDataFrame = LabelFrame(featureFrame, font=("", 16,"bold"))
     coinDataFrame.pack(side=LEFT, anchor=NW, fill=Y)
 
     coinDataLabel_dict = { }
@@ -150,7 +176,8 @@ def openWallet():
     # ------------------------------------------------------------------------------------- #
 
     coinListBox.bind("<<ListboxSelect>>", onCoinListBoxSelected)
-    coinListBox.select_set(0)
+    coinListBox.selection_set(0)
+    setCoinListBoxSelection(0) # default display BTC asset
 
 ###############################################################################################
     
