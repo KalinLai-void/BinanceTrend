@@ -3,9 +3,6 @@ import os
 # from Binance API
 # visit: https://www.binance.com/en/my/settings/api-management
 
-#API_KEY = "klk4CHcY4SeMMIl5xMUTGdIwDvQ5SpSTz0SHCjIhsxbpTAFH1mHykePHzgoWu5Cz"
-#API_SECRET = "dsiP8UbPs9ZpqpHvBCbMHhZYaavU5A6qHnVhOmQBEqeIxSUIwmQH7pCYuFlIL8GR"
-
 API_KEY = ""
 API_SECRET = ""
 
