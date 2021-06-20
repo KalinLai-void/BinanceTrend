@@ -1,6 +1,3 @@
-from typing_extensions import runtime
-
-from numpy.core.fromnumeric import repeat
 import binanceAPI as BN_config
 import data as BN_data
 import account as BN_account
